@@ -256,3 +256,8 @@ mrb_mruby_syslog_gem_init(mrb_state *mrb)
   mrb_define_syslog_level(LOG_DEBUG, debug);
 #endif
 }
+
+void
+mrb_mruby_syslog_gem_final(mrb_state *mrb)
+{
+}
