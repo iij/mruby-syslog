@@ -121,14 +121,14 @@ mrb_mruby_syslog_gem_init(mrb_state *mrb)
 
   slog = mrb_define_module(mrb, "Syslog");
 
-  mrb_define_module_function(mrb, slog, "open", mrb_f_syslog_open, ARGS_ANY());
-  mrb_define_module_function(mrb, slog, "log", mrb_f_syslog_log, ARGS_ANY());
-  mrb_define_module_function(mrb, slog, "close", mrb_f_syslog_close, ARGS_NONE());
-  mrb_define_module_function(mrb, slog, "opened?", mrb_f_syslog_isopen, ARGS_NONE());
+  mrb_define_module_function(mrb, slog, "open",    mrb_f_syslog_open,   MRB_ARGS_ANY());
+  mrb_define_module_function(mrb, slog, "log",     mrb_f_syslog_log,    MRB_ARGS_ANY());
+  mrb_define_module_function(mrb, slog, "close",   mrb_f_syslog_close,  MRB_ARGS_NONE());
+  mrb_define_module_function(mrb, slog, "opened?", mrb_f_syslog_isopen, MRB_ARGS_NONE());
 
-  mrb_define_module_function(mrb, slog, "ident", mrb_f_syslog_ident, ARGS_NONE());
-  mrb_define_module_function(mrb, slog, "options", mrb_f_syslog_options, ARGS_NONE());
-  mrb_define_module_function(mrb, slog, "facility", mrb_f_syslog_facility, ARGS_NONE());
+  mrb_define_module_function(mrb, slog, "ident",    mrb_f_syslog_ident,    MRB_ARGS_NONE());
+  mrb_define_module_function(mrb, slog, "options",  mrb_f_syslog_options,  MRB_ARGS_NONE());
+  mrb_define_module_function(mrb, slog, "facility", mrb_f_syslog_facility, MRB_ARGS_NONE());
 
   /* Syslog options */
 #define mrb_define_syslog_option(c) \
