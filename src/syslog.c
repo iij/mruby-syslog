@@ -69,7 +69,7 @@ mrb_f_syslog_log(mrb_state *mrb, mrb_value self)
   }
 
   str = mrb_str_format(mrb, argc-1, argv+1, argv[0]);
-  syslog(mrb_fixnum(pri), "%s", RSTRING_PTR(str)); 
+  syslog(mrb_fixnum(pri), "%*s", RSTRING_LEN(str), RSTRING_PTR(str)); 
 
   return self;
 }
