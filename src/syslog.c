@@ -54,23 +54,18 @@ mrb_f_syslog_open(mrb_state *mrb, mrb_value self)
 }
 
 mrb_value
-mrb_f_syslog_log(mrb_state *mrb, mrb_value self)
+mrb_f_syslog_log0(mrb_state *mrb, mrb_value self)
 {
-  mrb_value pri, str, *argv;
-  int argc;
+  mrb_int len, prio;
+  char *cp;
 
-  mrb_get_args(mrb, "o*", &pri, &argv, &argc);
-  if (argc < 1) {
-    mrb_raisef(mrb, E_ARGUMENT_ERROR, "wrong number of arguments (%S for 2+)", mrb_fixnum_value(argc+1));
-  }
+  mrb_get_args(mrb, "is", &prio, &cp, &len);
 
   if (!syslog_opened) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "must open syslog before write");
   }
 
-  str = mrb_str_format(mrb, argc-1, argv+1, argv[0]);
-  syslog(mrb_fixnum(pri), "%*s", RSTRING_LEN(str), RSTRING_PTR(str)); 
-
+  syslog(prio, "%*s", len, cp);
   return self;
 }
 
@@ -122,7 +117,7 @@ mrb_mruby_syslog_gem_init(mrb_state *mrb)
   slog = mrb_define_module(mrb, "Syslog");
 
   mrb_define_module_function(mrb, slog, "open",    mrb_f_syslog_open,   MRB_ARGS_ANY());
-  mrb_define_module_function(mrb, slog, "log",     mrb_f_syslog_log,    MRB_ARGS_ANY());
+  mrb_define_module_function(mrb, slog, "_log0",   mrb_f_syslog_log0,   MRB_ARGS_REQ(1));
   mrb_define_module_function(mrb, slog, "close",   mrb_f_syslog_close,  MRB_ARGS_NONE());
   mrb_define_module_function(mrb, slog, "opened?", mrb_f_syslog_isopen, MRB_ARGS_NONE());
 
