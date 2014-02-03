@@ -8,17 +8,17 @@ API is compatible with [Syslog module for CRuby](http://ruby-doc.org/stdlib-2.1.
 
 Add a line to your `build_config.rb`:
 
-    ```
-    conf.gem :github => 'iij/mruby-syslog'
-    ```
+```Ruby
+conf.gem :github => 'iij/mruby-syslog'
+```
 
 ### Exmaple:
 
-    ```Ruby
-    Syslog.open("syslogtest")
-    Syslog.log(Syslog::LOG_WARNING, "the sky is falling in %d seconds!", 100)
-    Syslog.close
-    ```
+```Ruby
+Syslog.open("syslogtest")
+Syslog.log(Syslog::LOG_WARNING, "the sky is falling in %d seconds!", 100)
+Syslog.close
+```
 
 ### Run tests:
 
