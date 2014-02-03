@@ -1,27 +1,30 @@
 mruby-syslog
 ============
 
-### To build:
+"mruby-syslog" provides a mruby interface to the POSIX system logging facility.
+API is compatible with [Syslog module for CRuby](http://ruby-doc.org/stdlib-2.1.0/libdoc/syslog/rdoc/Syslog.html).
 
-Prerequisites:
+### How To Use:
 
-    * mruby
-    * libc
+Add a line to your `build_config.rb`:
 
-    activate GEMs in *build_config.rb*
-    * conf.gem :git => 'https://github.com/iij/mruby-syslog.git', :branch => 'master'
-    env ENABLE_GEMS=true ruby ./minirake
+    ```
+    conf.gem :github => 'iij/mruby-syslog'
+    ```
 
-### To run the tests:
+### Exmaple:
 
-    env ENABLE_GEMS=true ruby ./minirake test
-
-
-For example,
-
+    ```Ruby
     Syslog.open("syslogtest")
     Syslog.log(Syslog::LOG_WARNING, "the sky is falling in %d seconds!", 100)
     Syslog.close
+    ```
+
+### Run tests:
+
+    ruby ./minirake test
+
+Note: you need [mruby-io](https://github.com/iij/mruby-io) to run tests.
 
 
 ## License
@@ -45,4 +48,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING 
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER 
 DEALINGS IN THE SOFTWARE.
-
