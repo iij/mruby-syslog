@@ -1,54 +1,50 @@
 /*
 ** syslog.c - Syslog module
 **
-** See Copyright Notice in mruby.h
 */
 
-#include "mruby.h"
-#include "mruby/string.h"
 #include <string.h>
 #include <syslog.h>
 
+#include "mruby.h"
+#include "mruby/string.h"
+#include "mruby/variable.h"
 
-static const char *syslog_ident = NULL;
-static int syslog_options = -1, syslog_facility = -1, syslog_mask = -1;
-static int syslog_opened = 0;
+static mrb_value
+reset_vars(mrb_state *mrb, mrb_value self)
+{
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@opened"), mrb_false_value());
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@ident"), mrb_nil_value());
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@options"), mrb_nil_value());
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@facility"), mrb_nil_value());
+  return self;
+}
 
 mrb_value
 mrb_f_syslog_open(mrb_state *mrb, mrb_value self)
 {
-  mrb_value ident, opt, fac;
+  mrb_value ident, opened;
+  mrb_int facility, options;
+  const char *cp;
 
-  ident = opt = fac = mrb_nil_value();
-
-  mrb_get_args(mrb, "o|oo", &ident, &opt, &fac);
-  if (mrb_nil_p(ident)) {
-    mrb_raise(mrb, E_ARGUMENT_ERROR, "no log message supplied");
-  }
-
-  if (syslog_opened) {
+  opened = mrb_cv_get(mrb, self, mrb_intern_lit(mrb, "@opened"));
+  if (mrb_bool(opened)) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "syslog already open");
   }
 
-  syslog_ident = mrb_string_value_cstr(mrb, &ident);
+  ident    = mrb_gv_get(mrb, mrb_intern_lit(mrb, "$0"));
+  options  = LOG_PID | LOG_CONS;
+  facility = LOG_USER;
+  mrb_get_args(mrb, "|Sii", &ident, &options, &facility);
 
-  if (mrb_nil_p(opt)) {
-    syslog_options = LOG_PID | LOG_CONS;
-  } else {
-    syslog_options = mrb_fixnum(opt);
-  }
+  ident = mrb_check_string_type(mrb, ident);
+  cp = mrb_str_to_cstr(mrb, ident);
+  openlog(cp, options, facility);
 
-  if (mrb_nil_p(fac)) {
-    syslog_facility = LOG_USER;
-  } else {
-    syslog_facility = mrb_fixnum(fac);
-  }
-
-  openlog(syslog_ident, syslog_options, syslog_facility);
-
-  syslog_opened = 1;
-
-  setlogmask(syslog_mask = setlogmask(0));
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@opened"), mrb_true_value());
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@ident"), ident);
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@options"), mrb_fixnum_value(options));
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@facility"), mrb_fixnum_value(facility));
 
   return self;
 }
@@ -60,11 +56,6 @@ mrb_f_syslog_log0(mrb_state *mrb, mrb_value self)
   char *cp;
 
   mrb_get_args(mrb, "is", &prio, &cp, &len);
-
-  if (!syslog_opened) {
-    mrb_raise(mrb, E_RUNTIME_ERROR, "must open syslog before write");
-  }
-
   syslog(prio, "%*s", len, cp);
   return self;
 }
@@ -72,41 +63,17 @@ mrb_f_syslog_log0(mrb_state *mrb, mrb_value self)
 mrb_value
 mrb_f_syslog_close(mrb_state *mrb, mrb_value self)
 {
-  if (!syslog_opened) {
+  mrb_value opened;
+
+  opened = mrb_cv_get(mrb, self, mrb_intern_lit(mrb, "@opened"));
+  if (! mrb_bool(opened)) {
     mrb_raise(mrb, E_RUNTIME_ERROR, "syslog not opened");
   }
 
   closelog();
-
-  syslog_ident = NULL;
-  syslog_options = syslog_facility = syslog_mask = -1;
-  syslog_opened = 0;
+  reset_vars(mrb, self);
 
   return mrb_nil_value();
-}
-
-mrb_value
-mrb_f_syslog_isopen(mrb_state *mrb, mrb_value self)
-{
-  return syslog_opened ? mrb_true_value() : mrb_false_value();
-}
-
-mrb_value
-mrb_f_syslog_ident(mrb_state *mrb, mrb_value self)
-{
-  return syslog_opened ? mrb_str_new(mrb, syslog_ident, strlen(syslog_ident)) : mrb_nil_value();
-}
-
-mrb_value
-mrb_f_syslog_options(mrb_state *mrb, mrb_value self)
-{
-  return syslog_opened ? mrb_fixnum_value(syslog_options) : mrb_nil_value();
-}
-
-mrb_value
-mrb_f_syslog_facility(mrb_state *mrb, mrb_value self)
-{
-  return syslog_opened ? mrb_fixnum_value(syslog_facility) : mrb_nil_value();
 }
 
 void
@@ -119,11 +86,7 @@ mrb_mruby_syslog_gem_init(mrb_state *mrb)
   mrb_define_module_function(mrb, slog, "open",    mrb_f_syslog_open,   MRB_ARGS_ANY());
   mrb_define_module_function(mrb, slog, "_log0",   mrb_f_syslog_log0,   MRB_ARGS_REQ(1));
   mrb_define_module_function(mrb, slog, "close",   mrb_f_syslog_close,  MRB_ARGS_NONE());
-  mrb_define_module_function(mrb, slog, "opened?", mrb_f_syslog_isopen, MRB_ARGS_NONE());
-
-  mrb_define_module_function(mrb, slog, "ident",    mrb_f_syslog_ident,    MRB_ARGS_NONE());
-  mrb_define_module_function(mrb, slog, "options",  mrb_f_syslog_options,  MRB_ARGS_NONE());
-  mrb_define_module_function(mrb, slog, "facility", mrb_f_syslog_facility, MRB_ARGS_NONE());
+  reset_vars(mrb, mrb_obj_value(slog));
 
   /* Syslog options */
 #define mrb_define_syslog_option(c) \
