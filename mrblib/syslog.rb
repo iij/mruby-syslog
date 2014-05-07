@@ -7,10 +7,6 @@ module Syslog
     @facility
   end
 
-  def self.ident
-    @ident
-  end
-
   def self.opened?
     @opened
   end

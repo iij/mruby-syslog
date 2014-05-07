@@ -13,8 +13,8 @@
 static mrb_value
 reset_vars(mrb_state *mrb, mrb_value self)
 {
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "ident"), mrb_nil_value());
   mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@opened"), mrb_false_value());
-  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@ident"), mrb_nil_value());
   mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@options"), mrb_nil_value());
   mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@facility"), mrb_nil_value());
   return self;
@@ -25,7 +25,6 @@ mrb_f_syslog_open(mrb_state *mrb, mrb_value self)
 {
   mrb_value ident, opened;
   mrb_int facility, options;
-  const char *cp;
 
   opened = mrb_cv_get(mrb, self, mrb_intern_lit(mrb, "@opened"));
   if (mrb_bool(opened)) {
@@ -38,11 +37,28 @@ mrb_f_syslog_open(mrb_state *mrb, mrb_value self)
   mrb_get_args(mrb, "|Sii", &ident, &options, &facility);
 
   ident = mrb_check_string_type(mrb, ident);
-  cp = mrb_str_to_cstr(mrb, ident);
-  openlog(cp, options, facility);
+
+  /*
+   * We assume mrb_str_new() returns a *not-shared* string with a NUL
+   * character at the end of the string.
+   */
+  ident = mrb_str_new(mrb, RSTRING_PTR(ident), RSTRING_LEN(ident));
+
+  /*
+   * We must set "ident" to a class variable before calling openlog(3).
+   * Otherwise, syslog(3) may refer to some unallocated (GC'ed out) memory
+   * area when mrb_cv_set() fails.  Note that some openlog(3) implementations
+   * store "ident" argument as is (not strdup(3)ed!).
+   * http://man7.org/linux/man-pages/man3/syslog.3.html#NOTES
+   *
+   * And we make class variable "ident" inaccessible from Ruby world
+   * for safety.
+   */
+  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "ident"), ident);
+
+  openlog(RSTRING_PTR(ident), options, facility);
 
   mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@opened"), mrb_true_value());
-  mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@ident"), ident);
   mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@options"), mrb_fixnum_value(options));
   mrb_cv_set(mrb, self, mrb_intern_lit(mrb, "@facility"), mrb_fixnum_value(facility));
 
@@ -76,6 +92,18 @@ mrb_f_syslog_close(mrb_state *mrb, mrb_value self)
   return mrb_nil_value();
 }
 
+mrb_value
+mrb_f_syslog_ident(mrb_state *mrb, mrb_value self)
+{
+  mrb_value s;
+  s = mrb_cv_get(mrb, self, mrb_intern_lit(mrb, "ident"));
+  if (! mrb_string_p(s)) {
+    if (mrb_nil_p(s)) return s;
+    mrb_raisef(mrb, E_RUNTIME_ERROR, "class variable ident of Syslog is not a string");
+  }
+  return mrb_str_new_cstr(mrb, RSTRING_PTR(s));
+}
+
 void
 mrb_mruby_syslog_gem_init(mrb_state *mrb)
 {
@@ -86,6 +114,7 @@ mrb_mruby_syslog_gem_init(mrb_state *mrb)
   mrb_define_module_function(mrb, slog, "open",    mrb_f_syslog_open,   MRB_ARGS_ANY());
   mrb_define_module_function(mrb, slog, "_log0",   mrb_f_syslog_log0,   MRB_ARGS_REQ(1));
   mrb_define_module_function(mrb, slog, "close",   mrb_f_syslog_close,  MRB_ARGS_NONE());
+  mrb_define_module_function(mrb, slog, "ident",   mrb_f_syslog_ident,  MRB_ARGS_NONE());
   reset_vars(mrb, mrb_obj_value(slog));
 
   /* Syslog options */
