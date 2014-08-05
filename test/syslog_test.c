@@ -7,23 +7,50 @@
 #include <string.h>
 
 #include "mruby.h"
+#include "mruby/string.h"
 #include "error.h"
 
-static int saved_stderr;
-static char *tmppath = NULL;
+static int saved_stderr;   /* XXX */
+
+mrb_value
+mrb_syslogtest_last(mrb_state *mrb, mrb_value cls)
+{
+  mrb_value path;
+  FILE *fp;
+  size_t n;
+  char *cp;
+  char buf[1000];
+
+  mrb_get_args(mrb, "S", &path);
+  cp = mrb_str_to_cstr(mrb, path);
+
+  fp = fopen(cp, "r");
+  if (fp == NULL) {
+    mrb_sys_fail(mrb, "cannot open syslog file");
+  }
+
+  buf[0] = '\0';
+  while (fgets(buf, sizeof(buf), fp) != NULL)
+    ;
+  n = strcspn(buf, "\n");
+  buf[n] = '\0';
+
+  fclose(fp);
+
+  return mrb_str_new(mrb, buf, n);
+}
 
 mrb_value
 mrb_syslogtest_setup(mrb_state *mrb, mrb_value cls)
 {
-  int d, len;
+  mrb_value path;
+  int d;
   char *cp;
 
-  mrb_get_args(mrb, "s", &cp, &len);
-  tmppath = malloc(len + 1);
-  memcpy(tmppath, cp, len);
-  tmppath[len] = '\0';
+  mrb_get_args(mrb, "S", &path);
+  cp = mrb_str_to_cstr(mrb, path);
 
-  d = open(tmppath, O_WRONLY|O_CREAT|O_TRUNC, 0666);
+  d = open(cp, O_WRONLY|O_CREAT|O_TRUNC, 0666);
   if (d == -1) {
     mrb_sys_fail(mrb, "cannot open syslog file");
   }
@@ -39,17 +66,13 @@ mrb_syslogtest_setup(mrb_state *mrb, mrb_value cls)
 mrb_value
 mrb_syslogtest_teardown(mrb_state *mrb, mrb_value cls)
 {
-  mrb_value b;
+  mrb_value path;
+  char *cp;
 
-  b = mrb_true_value();
-  mrb_get_args(mrb, "|o", &b);
+  mrb_get_args(mrb, "S", &path);
+  cp = mrb_str_to_cstr(mrb, path);
+  (void)unlink(cp);
 
-  if (tmppath != NULL) {
-    if (mrb_bool(b)) {
-      unlink(tmppath);
-    }
-    free(tmppath);
-  }
   if (dup2(saved_stderr, STDERR_FILENO) == -1) {
     mrb_sys_fail(mrb, "dup2");
   }
@@ -60,6 +83,7 @@ void
 mrb_mruby_syslog_gem_test(mrb_state *mrb)
 {
   struct RClass *m = mrb_define_module(mrb, "SyslogTest");
+  mrb_define_class_method(mrb, m, "last", mrb_syslogtest_last, MRB_ARGS_REQ(1));
   mrb_define_class_method(mrb, m, "setup", mrb_syslogtest_setup, MRB_ARGS_REQ(1));
   mrb_define_class_method(mrb, m, "teardown", mrb_syslogtest_teardown, MRB_ARGS_OPT(1));
 }

@@ -1,7 +1,6 @@
 $syslogtmp = "mruby-syslog.tmp"
 def syslog_last_line
-  log = File.open($syslogtmp) { |io| io.read }
-  log.split("\n")[-1]
+  SyslogTest.last $syslogtmp
 end
 
 SyslogTest.setup $syslogtmp
@@ -63,4 +62,4 @@ assert('Syslog.options') do
   opts1 == opts2
 end
 
-SyslogTest.teardown true
+SyslogTest.teardown $syslogtmp
