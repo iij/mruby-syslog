@@ -14,4 +14,14 @@ module Syslog
   def self.options
     @options
   end
+
+  class << self
+    [ "emerg",   "alert",  "crit", "err",
+      "warning", "notice", "info", "debug" ].each { |lstr|
+      lnum = Syslog.const_get("LOG_#{lstr.upcase}")
+      self.define_method(lstr) do |*args|
+        Syslog.log lnum, *args
+      end
+    }
+  end
 end
