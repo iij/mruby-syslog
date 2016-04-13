@@ -19,8 +19,8 @@ Supported methods are:
 - Syslog.notice
 - Syslog.open
 - Syslog.opened?
-- Syslog.warning
 - Syslog.options
+- Syslog.warning
 
 ### How To Use:
 
