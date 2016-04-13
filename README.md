@@ -36,6 +36,9 @@ conf.gem :github => 'iij/mruby-syslog'
 Syslog.open("syslogtest")
 Syslog.log(Syslog::LOG_WARNING, "the sky is falling in %d seconds!", 100)
 Syslog.close
+
+# or simply
+Syslog.err("something's wrong here")
 ```
 
 ### Run tests:
