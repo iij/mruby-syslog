@@ -12,7 +12,7 @@ Add a line to your `build_config.rb`:
 conf.gem :github => 'iij/mruby-syslog'
 ```
 
-### Exmaple:
+### Example:
 
 ```Ruby
 Syslog.open("syslogtest")
