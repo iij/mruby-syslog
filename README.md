@@ -4,24 +4,6 @@ mruby-syslog
 "mruby-syslog" provides a mruby interface to the POSIX system logging facility.
 API is compatible with [Syslog module for CRuby](http://ruby-doc.org/stdlib-2.1.0/libdoc/syslog/rdoc/Syslog.html).
 
-Supported methods are:
-
-- Syslog.alert
-- Syslog.close
-- Syslog.crit
-- Syslog.debug
-- Syslog.emerg
-- Syslog.err
-- Syslog.facility
-- Syslog.ident
-- Syslog.info
-- Syslog.log(priority, format, \*arg)
-- Syslog.notice
-- Syslog.open
-- Syslog.opened?
-- Syslog.options
-- Syslog.warning
-
 ### How To Use:
 
 Add a line to your `build_config.rb`:
@@ -40,6 +22,28 @@ Syslog.close
 # or simply
 Syslog.err("something's wrong here")
 ```
+
+### Compatibility
+
+Supported methods are:
+
+- Syslog.alert
+- Syslog.close
+- Syslog.crit
+- Syslog.debug
+- Syslog.emerg
+- Syslog.err
+- Syslog.facility
+- Syslog.ident
+- Syslog.info
+- Syslog.log(priority, format, \*arg)
+- Syslog.notice
+- Syslog.open
+- Syslog.opened?
+- Syslog.options
+- Syslog.warning
+
+Note: You can write syslog messages without calling Syslog.open though it is required on CRuby.
 
 ### Run tests:
 
