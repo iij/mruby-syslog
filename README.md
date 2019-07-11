@@ -46,13 +46,6 @@ Supported methods are:
 
 Note: You can write syslog messages without calling Syslog.open though it is required on CRuby.
 
-### Run tests:
-
-    ruby ./minirake test
-
-Note: you need [mruby-io](https://github.com/iij/mruby-io) to run tests.
-
-
 ## License
 
 Copyright (c) 2012 Internet Initiative Japan Inc.
