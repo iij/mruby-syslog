@@ -1,5 +1,6 @@
 mruby-syslog
 ============
+[![Build Status](https://travis-ci.org/iij/mruby-syslog.svg?branch=master)](https://travis-ci.org/iij/mruby-syslog)
 
 "mruby-syslog" provides a mruby interface to the POSIX system logging facility.
 API is compatible with [Syslog module for CRuby](http://ruby-doc.org/stdlib-2.1.0/libdoc/syslog/rdoc/Syslog.html).
