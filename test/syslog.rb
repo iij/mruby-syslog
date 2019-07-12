@@ -45,6 +45,14 @@ assert('Syslog.log with format') do
   line.include? "Syslog.log 1 2 3"
 end
 
+assert('Syslog.log with unexpected format string') do
+  Syslog.open("abc", Syslog::LOG_PERROR)
+  Syslog.log(Syslog::LOG_INFO, "Syslog.log %c %d %s")
+  Syslog.close
+
+  assert_true syslog_last_line.include?("Syslog.log %c %d %s")
+end
+
 assert('Syslog.opened?') do
   o0 = Syslog.opened?
   Syslog.open("abc", Syslog::LOG_PERROR)
